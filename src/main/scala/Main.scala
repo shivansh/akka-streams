@@ -15,16 +15,17 @@ object Main extends App {
 
   var initialSource = Source(1 to 100)
 
-  var x = 0
-  for (x <- 2 to 100) {
-    initialSource = initialSource.filter{k => k == x || k % x != 0}
-  }
+  // Iterative approach, too many mutations
+  // var x = 0
+  // for (x <- 2 to 100) {
+  //   initialSource = initialSource.filter{k => k == x || k % x != 0}
+  // }
 
-  // Recursive approach
-  /*filterFxn(k: Int, s: Source): Source = {*/
-    //if (k == 100) initialSource
-    //else filterFxn(k+1, s.filter(x => x == k || x % k != 0))
-  /*}*/
-  initialSource.to(printingSink).run()
+  // Recursive, no mutations
+  def filterFxn(k: Int, s: Source[Int, NotUsed]): Source[Int, NotUsed] = {
+    if (k == 100) s
+    else filterFxn(k+1, s.filter(x => x == k || x % k != 0))
+  }
+  filterFxn(2, initialSource).to(printingSink).run()
 
 }
