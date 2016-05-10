@@ -23,19 +23,17 @@ object Main extends App {
   // }
 
   // Recursive, no mutations
-  var generatedHead = 0
   def filterFxn(k: Int, s: Source[Int, NotUsed]): Source[Int, NotUsed] = {
     if (k == 100) s
     else {
       val first: Future[Int] = {
         s.take(1).runWith(Sink.head)
       } 
-      first onSuccess {
-        case x => var generatedHead = x
-      }
-      filterFxn(generatedHead , s.filter(x => x == k || x % k != 0))
+      for {
+        k <- first
+      } yield filterFxn(k, s.filter(x => x == k || x % k != 0))
     }
   }
-  filterFxn(2, initialSource).to(printingSink).run()
+  val sieve = filterFxn(2, initialSource).to(printingSink).run()
 
 }
