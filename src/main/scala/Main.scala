@@ -5,6 +5,7 @@ import akka.stream._
 import akka.stream.scaladsl._
 import scala.concurrent._
 import scala.util._
+import scala.concurrent.ExecutionContext.Implicits._
 
 object Main extends App {
   implicit val system = ActorSystem("QuickStart")
@@ -22,9 +23,18 @@ object Main extends App {
   // }
 
   // Recursive, no mutations
+  var generatedHead = 0
   def filterFxn(k: Int, s: Source[Int, NotUsed]): Source[Int, NotUsed] = {
     if (k == 100) s
-    else filterFxn(k+1, s.filter(x => x == k || x % k != 0))
+    else {
+      val first: Future[Int] = {
+        s.take(1).runWith(Sink.head)
+      } 
+      first onSuccess {
+        case x => var generatedHead = x
+      }
+      filterFxn(generatedHead , s.filter(x => x == k || x % k != 0))
+    }
   }
   filterFxn(2, initialSource).to(printingSink).run()
 
